@@ -6,7 +6,8 @@ defmodule MarketplaceBot.Listings.Listing do
 
   @cast_fields ~w(fb_id url title price_cents currency description city state lat lng
                   images seller condition fb_created_at is_live is_sold is_pending
-                  is_receiver model_id earc_verdict status first_seen_at notified_at)a
+                  is_receiver model_id earc_verdict status first_seen_at notified_at
+                  image_dims)a
 
   schema "listings" do
     field :fb_id, :string
@@ -20,6 +21,7 @@ defmodule MarketplaceBot.Listings.Listing do
     field :lat, :float
     field :lng, :float
     field :images, {:array, :string}, default: []
+    field :image_dims, :map
     field :seller, :string
     field :condition, :string
     field :fb_created_at, :utc_datetime

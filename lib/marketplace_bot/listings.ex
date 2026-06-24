@@ -43,6 +43,13 @@ defmodule MarketplaceBot.Listings do
   @spec set_status(Listing.t(), String.t()) :: {:ok, Listing.t()} | {:error, Ecto.Changeset.t()}
   def set_status(%Listing{} = listing, status), do: update_listing(listing, %{status: status})
 
+  @spec put_image_dim(Listing.t(), non_neg_integer(), map()) ::
+          {:ok, Listing.t()} | {:error, Ecto.Changeset.t()}
+  def put_image_dim(%Listing{} = listing, index, %{} = dims) do
+    current = listing.image_dims || %{}
+    update_listing(listing, %{image_dims: Map.put(current, to_string(index), dims)})
+  end
+
   @spec get_listing!(term()) :: Listing.t()
   def get_listing!(id), do: Repo.get!(Listing, id) |> with_distance()
 

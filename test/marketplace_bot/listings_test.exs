@@ -57,4 +57,11 @@ defmodule MarketplaceBot.ListingsTest do
     fetched = Listings.get_listing!(l.id)
     assert fetched.distance_mi != nil
   end
+
+  test "put_image_dim/3 merges dimensions keyed by string index" do
+    {:ok, l} = %MarketplaceBot.Listings.Listing{} |> MarketplaceBot.Listings.Listing.changeset(%{fb_id: "dim1"}) |> Repo.insert()
+    {:ok, l} = MarketplaceBot.Listings.put_image_dim(l, 0, %{"w" => 100, "h" => 50})
+    {:ok, l} = MarketplaceBot.Listings.put_image_dim(l, 1, %{"w" => 200, "h" => 80})
+    assert l.image_dims == %{"0" => %{"w" => 100, "h" => 50}, "1" => %{"w" => 200, "h" => 80}}
+  end
 end
