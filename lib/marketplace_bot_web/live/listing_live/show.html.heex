@@ -1,53 +1,66 @@
-<div class="mx-auto max-w-3xl p-4">
-  <.link navigate={~p"/listings"} class="text-sm underline">← back</.link>
-  <h1 class="text-2xl font-semibold mt-2 mb-1"><%= @listing.title %></h1>
-  <div class="text-gray-600 mb-4">
-    <%= if @listing.price_cents, do: "$#{div(@listing.price_cents, 100)}", else: "price n/a" %>
-    · <%= @listing.city %>, <%= @listing.state %>
-    <%= if @listing.distance_mi, do: " · #{@listing.distance_mi} mi from El Campo" %>
-  </div>
+<div class="mx-auto max-w-3xl p-4 space-y-6">
+  <.link navigate={~p"/listings"} class="link link-hover text-sm">← back to matches</.link>
 
-  <div class="grid grid-cols-2 gap-2 mb-4">
-    <img :for={src <- @listing.images || []} src={src} class="w-full rounded" />
-  </div>
+  <header>
+    <h1 class="text-2xl font-semibold"><%= @listing.title %></h1>
+    <div class="text-base-content/70 mt-1">
+      <%= if @listing.price_cents, do: "$#{div(@listing.price_cents, 100)}", else: "price n/a" %>
+      · <%= @listing.city %>, <%= @listing.state %>
+      <%= if @listing.distance_mi, do: " · #{@listing.distance_mi} mi from El Campo" %>
+    </div>
+  </header>
 
-  <p class="whitespace-pre-line mb-4"><%= @listing.description %></p>
-
-  <a href={@listing.url} target="_blank" class="inline-block mb-6 underline">View on Facebook ↗</a>
-
-  <div class="border-t pt-4 space-y-4">
-    <div>
-      <div class="text-sm font-medium mb-1">
-        eARC: <%= @listing.earc_verdict %>
-        <span :if={@model}>· model <%= @model.brand %> <%= @model.model %> (<%= @model.source %>)</span>
+  <%!-- Curate panel: ABOVE the images --%>
+  <section class="card bg-base-200">
+    <div class="card-body gap-4">
+      <div>
+        <div class="text-sm font-medium mb-1">
+          eARC: <span class={"badge #{badge(@listing.earc_verdict)}"}><%= @listing.earc_verdict %></span>
+          <span :if={@model} class="text-base-content/70">
+            · <%= @model.brand %> <%= @model.model %> (<%= @model.source %>)
+          </span>
+        </div>
+        <div class="join">
+          <button :for={v <- ~w(yes no unknown)} phx-click="correct_verdict" phx-value-verdict={v}
+            class={"btn btn-sm join-item transition phx-click-loading:opacity-50 #{if @listing.earc_verdict == v, do: "btn-active btn-primary"}"}>
+            eARC <%= v %>
+          </button>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <button phx-click="correct_verdict" phx-value-verdict="yes"
-          class="px-2 py-1 text-sm border rounded">eARC yes</button>
-        <button phx-click="correct_verdict" phx-value-verdict="no"
-          class="px-2 py-1 text-sm border rounded">eARC no</button>
-        <button phx-click="correct_verdict" phx-value-verdict="unknown"
-          class="px-2 py-1 text-sm border rounded">unknown</button>
+
+      <form id="override-model" phx-submit="override_model" class="flex flex-wrap gap-2 items-end">
+        <label class="form-control">
+          <span class="label-text text-xs">brand</span>
+          <input name="brand" class="input input-bordered input-sm" />
+        </label>
+        <label class="form-control">
+          <span class="label-text text-xs">model</span>
+          <input name="model" class="input input-bordered input-sm" />
+        </label>
+        <button class="btn btn-sm btn-secondary" phx-disable-with="Re-resolving…">
+          <span class="loading loading-spinner loading-xs hidden phx-submit-loading:inline-block"></span>
+          override + re-resolve
+        </button>
+      </form>
+
+      <div class="join">
+        <button :for={s <- ~w(interested contacted dismissed)} phx-click="set_status" phx-value-status={s}
+          class={"btn btn-sm join-item transition phx-click-loading:opacity-50 #{if @listing.status == s, do: "btn-active btn-primary"}"}>
+          <%= s %>
+        </button>
       </div>
     </div>
+  </section>
 
-    <form id="override-model" phx-submit="override_model" class="flex gap-2 items-end">
-      <div>
-        <label class="block text-xs">brand</label>
-        <input name="brand" class="border rounded px-2 py-1 text-sm" />
-      </div>
-      <div>
-        <label class="block text-xs">model</label>
-        <input name="model" class="border rounded px-2 py-1 text-sm" />
-      </div>
-      <button class="px-2 py-1 text-sm border rounded">override + re-resolve</button>
-    </form>
-
-    <div class="flex gap-2">
-      <button :for={s <- ~w(interested dismissed contacted)} phx-click="set_status" phx-value-status={s}
-        class={"px-2 py-1 text-sm border rounded #{if @listing.status == s, do: "bg-gray-200"}"}>
-        <%= s %>
-      </button>
+  <%!-- Gallery: cached, lazy, no layout shift --%>
+  <div :if={(@listing.images || []) != []} class="grid grid-cols-2 gap-2">
+    <div :for={{_src, i} <- Enum.with_index(@listing.images)} class="overflow-hidden rounded bg-base-300 aspect-[4/3]">
+      <img src={~p"/img/#{@listing.fb_id}/#{i}"} loading="lazy" {img_dims(@listing, i)}
+        class="w-full h-full object-cover" alt={"#{@listing.title} photo #{i + 1}"} />
     </div>
   </div>
+
+  <p :if={@listing.description} class="whitespace-pre-line"><%= @listing.description %></p>
+
+  <a href={@listing.url} target="_blank" class="link">View on Facebook ↗</a>
 </div>

@@ -39,4 +39,17 @@ defmodule MarketplaceBotWeb.ListingLive.Show do
     model = if l.model_id, do: Repo.get(Model, l.model_id), else: nil
     assign(socket, listing: l, model: model)
   end
+
+  defp badge("yes"), do: "badge-success"
+  defp badge("no"), do: "badge-error"
+  defp badge("unknown"), do: "badge-warning"
+  defp badge(_), do: "badge-ghost"
+
+  # Returns a keyword list of width/height attrs when dims are known, else [].
+  defp img_dims(listing, index) do
+    case listing.image_dims && Map.get(listing.image_dims, to_string(index)) do
+      %{"w" => w, "h" => h} -> [width: w, height: h]
+      _ -> []
+    end
+  end
 end

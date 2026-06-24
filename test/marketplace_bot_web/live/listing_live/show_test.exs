@@ -14,7 +14,7 @@ defmodule MarketplaceBotWeb.ListingLive.ShowTest do
   test "renders detail with photos and FB link", %{conn: conn, listing: l} do
     {:ok, _view, html} = live(conn, ~p"/listings/#{l.id}")
     assert html =~ "Denon AVR-X3700H"
-    assert html =~ "http://img/1.jpg"
+    assert html =~ ~s(src="/img/#{l.fb_id}/0")
     assert html =~ "nice"
   end
 
@@ -30,5 +30,18 @@ defmodule MarketplaceBotWeb.ListingLive.ShowTest do
     {:ok, view, _html} = live(conn, ~p"/listings/#{l.id}")
     view |> element("button[phx-value-status=interested]") |> render_click()
     assert Listings.get_listing!(l.id).status == "interested"
+  end
+
+  test "curate panel renders before the image gallery and override has a loading state", %{conn: conn} do
+    {:ok, l} = %MarketplaceBot.Listings.Listing{} |> MarketplaceBot.Listings.Listing.changeset(%{fb_id: "show1", title: "T", images: ["https://scontent.fbcdn.net/a.jpg"]}) |> MarketplaceBot.Repo.insert()
+    {:ok, _lv, html} = live(conn, ~p"/listings/#{l.id}")
+
+    # override + status controls appear before the gallery's cache-route <img>
+    {panel_pos, _} = :binary.match(html, "override + re-resolve")
+    {img_pos, _} = :binary.match(html, "/img/show1/0")
+    assert panel_pos < img_pos
+
+    assert html =~ "phx-disable-with"
+    assert html =~ ~s(src="/img/show1/0")
   end
 end
