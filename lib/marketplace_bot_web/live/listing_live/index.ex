@@ -7,8 +7,14 @@ defmodule MarketplaceBotWeb.ListingLive.Index do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    filters = %{verdict: params["verdict"]}
-    {:noreply, assign(socket, listings: Listings.list_matches(filters), verdict: params["verdict"])}
+    filters = %{verdict: params["verdict"], status: params["status"]}
+
+    {:noreply,
+     assign(socket,
+       listings: Listings.list_matches(filters),
+       verdict: params["verdict"],
+       status: params["status"]
+     )}
   end
 
   defp price(%{price_cents: nil}), do: "price n/a"
@@ -18,7 +24,7 @@ defmodule MarketplaceBotWeb.ListingLive.Index do
   defp verdict_label("yes"), do: "eARC: yes"
   defp verdict_label("unknown"), do: "eARC: unconfirmed"
   defp verdict_label(v), do: "eARC: #{v}"
-  defp badge("yes"), do: "bg-green-100 text-green-800"
-  defp badge("unknown"), do: "bg-yellow-100 text-yellow-800"
-  defp badge(_), do: "bg-gray-100 text-gray-700"
+  defp badge("yes"), do: "badge-success"
+  defp badge("unknown"), do: "badge-warning"
+  defp badge(_), do: "badge-ghost"
 end

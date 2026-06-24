@@ -1,24 +1,31 @@
-<div class="mx-auto max-w-5xl p-4">
-  <h1 class="text-2xl font-semibold mb-4">AV Receiver Matches</h1>
+<div class="mx-auto max-w-5xl p-4 space-y-6">
+  <h1 class="text-2xl font-semibold">AV Receiver Matches</h1>
 
-  <div class="flex gap-3 mb-6 text-sm">
-    <.link patch={~p"/listings"} class="underline">all</.link>
-    <.link patch={~p"/listings?verdict=yes"} class="underline">eARC: yes</.link>
-    <.link patch={~p"/listings?verdict=unknown"} class="underline">eARC: unconfirmed</.link>
+  <div class="space-y-2">
+    <div class="join">
+      <.link patch={~p"/listings"} class={"btn btn-sm join-item #{if is_nil(@verdict) and is_nil(@status), do: "btn-active btn-primary"}"}>All</.link>
+      <.link patch={~p"/listings?verdict=yes"} class={"btn btn-sm join-item #{if @verdict == "yes", do: "btn-active btn-primary"}"}>eARC: yes</.link>
+      <.link patch={~p"/listings?verdict=unknown"} class={"btn btn-sm join-item #{if @verdict == "unknown", do: "btn-active btn-primary"}"}>eARC: unconfirmed</.link>
+    </div>
+    <div class="join">
+      <.link patch={~p"/listings?status=interested"} class={"btn btn-sm join-item #{if @status == "interested", do: "btn-active btn-primary"}"}>Interested</.link>
+      <.link patch={~p"/listings?status=contacted"} class={"btn btn-sm join-item #{if @status == "contacted", do: "btn-active btn-primary"}"}>Contacted</.link>
+      <.link patch={~p"/listings?status=dismissed"} class={"btn btn-sm join-item #{if @status == "dismissed", do: "btn-active btn-primary"}"}>Dismissed</.link>
+    </div>
   </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <.link :for={l <- @listings} navigate={~p"/listings/#{l.id}"} class="block border rounded-lg overflow-hidden hover:shadow">
-      <img :if={l.images != [] and l.images != nil} src={hd(l.images)} class="w-full h-40 object-cover" />
-      <div class="p-3">
-        <div class="font-medium"><%= l.title %></div>
-        <div class="text-sm text-gray-600"><%= price(l) %> · <%= l.city %><%= dist_label(l) %></div>
-        <span class={"inline-block mt-2 text-xs px-2 py-0.5 rounded #{badge(l.earc_verdict)}"}>
-          <%= verdict_label(l.earc_verdict) %>
-        </span>
+    <.link :for={l <- @listings} navigate={~p"/listings/#{l.id}"} class="card bg-base-100 shadow hover:shadow-lg transition overflow-hidden">
+      <figure class="aspect-[4/3] bg-base-300">
+        <img :if={(l.images || []) != []} src={~p"/img/#{l.fb_id}/0"} loading="lazy" class="w-full h-full object-cover" alt={l.title} />
+      </figure>
+      <div class="card-body p-3 gap-1">
+        <div class="font-medium line-clamp-2"><%= l.title %></div>
+        <div class="text-sm text-base-content/70"><%= price(l) %> · <%= l.city %><%= dist_label(l) %></div>
+        <span class={"badge badge-sm #{badge(l.earc_verdict)}"}><%= verdict_label(l.earc_verdict) %></span>
       </div>
     </.link>
   </div>
 
-  <p :if={@listings == []} class="text-gray-500">No matches yet.</p>
+  <p :if={@listings == []} class="text-base-content/60">No matches.</p>
 </div>
