@@ -1,0 +1,24 @@
+<div class="mx-auto max-w-5xl p-4">
+  <h1 class="text-2xl font-semibold mb-4">AV Receiver Matches</h1>
+
+  <div class="flex gap-3 mb-6 text-sm">
+    <.link patch={~p"/listings"} class="underline">all</.link>
+    <.link patch={~p"/listings?verdict=yes"} class="underline">eARC: yes</.link>
+    <.link patch={~p"/listings?verdict=unknown"} class="underline">eARC: unconfirmed</.link>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <.link :for={l <- @listings} navigate={~p"/listings/#{l.id}"} class="block border rounded-lg overflow-hidden hover:shadow">
+      <img :if={l.images != [] and l.images != nil} src={hd(l.images)} class="w-full h-40 object-cover" />
+      <div class="p-3">
+        <div class="font-medium"><%= l.title %></div>
+        <div class="text-sm text-gray-600"><%= price(l) %> · <%= l.city %><%= dist_label(l) %></div>
+        <span class={"inline-block mt-2 text-xs px-2 py-0.5 rounded #{badge(l.earc_verdict)}"}>
+          <%= verdict_label(l.earc_verdict) %>
+        </span>
+      </div>
+    </.link>
+  </div>
+
+  <p :if={@listings == []} class="text-gray-500">No matches yet.</p>
+</div>

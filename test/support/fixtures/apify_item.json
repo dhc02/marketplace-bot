@@ -1,0 +1,15 @@
+{
+  "id": "987654321",
+  "url": "https://www.facebook.com/marketplace/item/987654321",
+  "title": "Denon AVR-X3700H 9.2 Receiver",
+  "price": {"amount": "450", "currency": "USD", "formatted": "$450"},
+  "description": "Excellent condition, supports 8K and eARC.",
+  "location": {"city": "Victoria", "state": "TX", "latitude": 28.8, "longitude": -96.9},
+  "images": ["https://scontent.example/a.jpg", "https://scontent.example/b.jpg"],
+  "seller": "Jane D.",
+  "condition": "Used - Like New",
+  "creation_time": 1717000000,
+  "is_live": true,
+  "is_sold": false,
+  "is_pending": false
+}

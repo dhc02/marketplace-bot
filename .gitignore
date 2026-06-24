@@ -1,0 +1,38 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# local state / data
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# node (in case)
+node_modules/
+
+# misc
+.DS_Store
+
+# sdd scratch (ledger, briefs, review packages)
+.superpowers/
+
+# elixir / phoenix
+/_build/
+/deps/
+/.elixir_ls/
+*.beam
+erl_crash.dump
+marketplace_bot-*.tar
+/priv/static/assets/
+/priv/static/cache_manifest.json
+npm-debug.log
+*.db-shm
+*.db-wal

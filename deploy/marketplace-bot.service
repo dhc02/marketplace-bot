@@ -1,0 +1,24 @@
+# systemd unit for the marketplace-bot Phoenix app (runs on the VM).
+# Install:
+#   sudo cp deploy/marketplace-bot.service /etc/systemd/system/marketplace-bot.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now marketplace-bot
+# Manage: sudo systemctl {status,restart,stop} marketplace-bot
+# Logs:   journalctl -u marketplace-bot -f
+[Unit]
+Description=marketplace-bot (Phoenix LiveView)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<user>
+Group=<user>
+WorkingDirectory=/home/<user>/projects/marketplace-bot
+ExecStart=/home/<user>/projects/marketplace-bot/scripts/start.sh
+Restart=always
+RestartSec=5
+TimeoutStartSec=180
+
+[Install]
+WantedBy=multi-user.target

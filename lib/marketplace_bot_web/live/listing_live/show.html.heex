@@ -1,0 +1,53 @@
+<div class="mx-auto max-w-3xl p-4">
+  <.link navigate={~p"/listings"} class="text-sm underline">← back</.link>
+  <h1 class="text-2xl font-semibold mt-2 mb-1"><%= @listing.title %></h1>
+  <div class="text-gray-600 mb-4">
+    <%= if @listing.price_cents, do: "$#{div(@listing.price_cents, 100)}", else: "price n/a" %>
+    · <%= @listing.city %>, <%= @listing.state %>
+    <%= if @listing.distance_mi, do: " · #{@listing.distance_mi} mi from El Campo" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2 mb-4">
+    <img :for={src <- @listing.images || []} src={src} class="w-full rounded" />
+  </div>
+
+  <p class="whitespace-pre-line mb-4"><%= @listing.description %></p>
+
+  <a href={@listing.url} target="_blank" class="inline-block mb-6 underline">View on Facebook ↗</a>
+
+  <div class="border-t pt-4 space-y-4">
+    <div>
+      <div class="text-sm font-medium mb-1">
+        eARC: <%= @listing.earc_verdict %>
+        <span :if={@model}>· model <%= @model.brand %> <%= @model.model %> (<%= @model.source %>)</span>
+      </div>
+      <div class="flex gap-2">
+        <button phx-click="correct_verdict" phx-value-verdict="yes"
+          class="px-2 py-1 text-sm border rounded">eARC yes</button>
+        <button phx-click="correct_verdict" phx-value-verdict="no"
+          class="px-2 py-1 text-sm border rounded">eARC no</button>
+        <button phx-click="correct_verdict" phx-value-verdict="unknown"
+          class="px-2 py-1 text-sm border rounded">unknown</button>
+      </div>
+    </div>
+
+    <form id="override-model" phx-submit="override_model" class="flex gap-2 items-end">
+      <div>
+        <label class="block text-xs">brand</label>
+        <input name="brand" class="border rounded px-2 py-1 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs">model</label>
+        <input name="model" class="border rounded px-2 py-1 text-sm" />
+      </div>
+      <button class="px-2 py-1 text-sm border rounded">override + re-resolve</button>
+    </form>
+
+    <div class="flex gap-2">
+      <button :for={s <- ~w(interested dismissed contacted)} phx-click="set_status" phx-value-status={s}
+        class={"px-2 py-1 text-sm border rounded #{if @listing.status == s, do: "bg-gray-200"}"}>
+        <%= s %>
+      </button>
+    </div>
+  </div>
+</div>
