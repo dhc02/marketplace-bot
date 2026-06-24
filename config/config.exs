@@ -76,6 +76,9 @@ config :marketplace_bot, :search,
   reference: %{name: "El Campo", lat: 29.1966, lng: -96.2697}
 
 # LLM / research providers. Model strings are user-chosen — keep verbatim.
+config :marketplace_bot, :image_cache_dir, "data/image_cache"
+
+# LLM / research providers. Model strings are user-chosen — keep verbatim.
 config :marketplace_bot, :llm,
   deepseek_base_url: "https://api.deepseek.com/v1",
   classify_model: "deepseek-v4-flash",

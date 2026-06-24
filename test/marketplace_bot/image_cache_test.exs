@@ -25,4 +25,63 @@ defmodule MarketplaceBot.ImageCacheTest do
     assert ImageCache.content_type(jpeg(1, 1)) == "image/jpeg"
     assert ImageCache.content_type(<<0, 1, 2>>) == nil
   end
+
+  alias MarketplaceBot.Listings.Listing
+  alias MarketplaceBot.Repo
+
+  defp tmp_dir do
+    d = Path.join(System.tmp_dir!(), "imgcache-#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf(d) end)
+    d
+  end
+
+  defp insert_listing(images) do
+    {:ok, l} = %Listing{} |> Listing.changeset(%{fb_id: "img#{System.unique_integer([:positive])}", images: images}) |> Repo.insert()
+    l
+  end
+
+  describe "fetch/3" do
+    setup do
+      # ImageCacheTest uses the Repo, so wrap in the sandbox like DataCase does.
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+      :ok
+    end
+
+    test "cache miss downloads, writes the file, returns path/type, and persists dims" do
+      png = <<137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, "IHDR", 40::32, 20::32, 0::40>>
+      l = insert_listing(["https://scontent.fbcdn.net/a.jpg"])
+      dir = tmp_dir()
+
+      Req.Test.stub(MarketplaceBot.ImageCache, fn conn -> Req.Test.text(conn, png) end)
+
+      assert {:ok, path, "image/png"} =
+               ImageCache.fetch(l, 0, cache_dir: dir, req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+
+      assert File.exists?(path)
+      assert Repo.get!(Listing, l.id).image_dims == %{"0" => %{"w" => 40, "h" => 20}}
+    end
+
+    test "cache hit does not re-download" do
+      l = insert_listing(["https://scontent.fbcdn.net/a.jpg"])
+      dir = tmp_dir()
+      png = <<137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, "IHDR", 1::32, 1::32, 0::40>>
+      Req.Test.stub(MarketplaceBot.ImageCache, fn conn -> Req.Test.text(conn, png) end)
+      {:ok, path1, _} = ImageCache.fetch(l, 0, cache_dir: dir, req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+
+      # Second call with a plug that would raise if hit:
+      Req.Test.stub(MarketplaceBot.ImageCache, fn _ -> raise "should not download on cache hit" end)
+      assert {:ok, ^path1, "image/png"} = ImageCache.fetch(l, 0, cache_dir: dir, req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+    end
+
+    test "missing image index returns error" do
+      l = insert_listing([])
+      assert {:error, :no_image} = ImageCache.fetch(l, 0, cache_dir: tmp_dir())
+    end
+
+    test "failed download returns error (no raise)" do
+      l = insert_listing(["https://scontent.fbcdn.net/a.jpg"])
+      Req.Test.stub(MarketplaceBot.ImageCache, fn conn -> Plug.Conn.send_resp(conn, 403, "nope") end)
+      assert {:error, _} = ImageCache.fetch(l, 0, cache_dir: tmp_dir(), req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+    end
+  end
 end
