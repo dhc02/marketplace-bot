@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# local ops notes (real infra details — never commit)
+/OPS.local.md
+
 # local state / data
 *.db
 *.sqlite

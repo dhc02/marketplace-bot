@@ -1,18 +1,49 @@
-# MarketplaceBot
+# marketplace-bot
 
-To start your Phoenix server:
+A personal, single-user tool that once a day scans **Facebook Marketplace** for home-theater **A/V receivers**, decides which listings likely support **eARC**, and sends a **Telegram digest of new matches** — with a Phoenix LiveView UI to browse and curate them. Elixir/Phoenix + SQLite.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## Pipeline
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+```
+Apify actor (Marketplace search URLs) → raw listings
+  → dedup by id (only new)
+    → classify + extract make/model  (negative-keyword prefilter → regex → DeepSeek)
+      → eARC resolver  (curated table → Kagi FastGPT + DeepSeek research, cached;
+                         Gemini vision reads the model number off photos when the text has none)
+        → keep eARC matches → daily Telegram digest
+```
 
-Ready to run in production? Please [check our deployment guides](https://phoenix.hexdocs.pm/deployment.html).
+The LiveView UI lets you browse listings, view photos, correct the eARC verdict / override the model, and set a status (interested / contacted / dismissed).
 
-## Learn more
+## Stack & design notes
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://phoenix.hexdocs.pm/overview.html
-* Docs: https://phoenix.hexdocs.pm
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+- **Elixir / Phoenix 1.8 + LiveView**, **SQLite** (`ecto_sqlite3`), **Oban** (daily cron), `Req` for all HTTP.
+- **Data source is the Apify actor** [`calm_builder/facebook-marketplace-scraper`](https://apify.com/calm_builder/facebook-marketplace-scraper), not a self-hosted scraper — kept behind a swappable `Source` interface.
+- **eARC is data-driven**: a user-correctable table of `model → yes/no/unknown`, with cached LLM/web-research fallback. Unknowns are still surfaced, tagged "eARC unconfirmed."
+- Providers: **DeepSeek** (classify/extract + eARC verdict), **Kagi FastGPT** (eARC web research), **Google Gemini** (vision model-extraction from photos).
+
+## Setup
+
+1. `cp .env.example .env` and fill in the tokens (Apify, Telegram, DeepSeek, Kagi, Gemini).
+2. `mix setup` — installs deps, creates + migrates the SQLite DB, seeds the eARC table.
+3. `mix phx.server` — then visit http://localhost:4010.
+
+## Daily scan
+
+Runs automatically via Oban cron (13:00 UTC). Run it manually with:
+
+```
+mix run -e 'MarketplaceBot.Jobs.DailyScan.run([])'
+```
+
+## Configuration
+
+- **Search** (locations, brands, price ceiling, distance reference): `config :marketplace_bot, :search` in `config/config.exs`.
+- **Providers / models**: `config :marketplace_bot, :llm` — endpoints and models are environment-overridable.
+- All secrets live in `.env` (gitignored); see `.env.example`.
+
+## Tests
+
+```
+mix test
+```
