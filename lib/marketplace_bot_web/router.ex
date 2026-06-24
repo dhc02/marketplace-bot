@@ -20,6 +20,7 @@ defmodule MarketplaceBotWeb.Router do
     live "/", ListingLive.Index, :index
     live "/listings", ListingLive.Index, :index
     live "/listings/:id", ListingLive.Show, :show
+    get "/img/:fb_id/:index", ImageController, :show
   end
 
   # Other scopes may use custom stacks.

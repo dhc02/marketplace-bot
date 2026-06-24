@@ -39,3 +39,5 @@ config :marketplace_bot,
   earc_llm: MarketplaceBot.Earc.LLMStub,
   notifier: MarketplaceBot.Notifier.Stub,
   vision: MarketplaceBot.Vision.Stub
+
+config :marketplace_bot, :image_req_options, plug: {Req.Test, MarketplaceBot.ImageCache}
