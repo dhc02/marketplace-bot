@@ -5,6 +5,7 @@ defmodule MarketplaceBotWeb.ImageController do
 
   def show(conn, %{"fb_id" => fb_id, "index" => index_str}) do
     with {index, ""} <- Integer.parse(index_str),
+         true <- index >= 0,
          %Listing{} = listing <- Repo.get_by(Listing, fb_id: fb_id),
          {:ok, path, content_type} <- ImageCache.fetch(listing, index, req_options: req_options(conn)) do
       conn

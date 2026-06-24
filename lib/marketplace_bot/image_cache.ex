@@ -37,7 +37,7 @@ defmodule MarketplaceBot.ImageCache do
     req = Keyword.merge([method: :get, url: url, headers: [{"user-agent", "Mozilla/5.0"}], receive_timeout: 30_000], opts[:req_options] || [])
 
     with {:ok, %{status: 200, body: bin}} when is_binary(bin) <- Req.request(req),
-         ct when is_binary(ct) <- content_type(bin) || "image/jpeg" do
+         ct when is_binary(ct) <- content_type(bin) do
       File.mkdir_p!(dir)
       ext = Map.get(@exts, ct, "img")
       path = Path.join(dir, "#{listing.fb_id}-#{index}.#{ext}")
@@ -52,6 +52,7 @@ defmodule MarketplaceBot.ImageCache do
     else
       {:ok, %{status: status}} -> {:error, {:http, status}}
       {:error, reason} -> {:error, reason}
+      nil -> {:error, :not_an_image}
       other -> {:error, other}
     end
   end
@@ -85,15 +86,16 @@ defmodule MarketplaceBot.ImageCache do
   defp jpeg_dims(<<0xFF, marker, len::16, rest::binary>>) do
     cond do
       marker in 0xC0..0xCF and marker not in [0xC4, 0xC8, 0xCC] ->
-        <<_precision::8, height::16, width::16, _::binary>> = rest
-        %{w: width, h: height}
+        case rest do
+          <<_precision::8, height::16, width::16, _::binary>> -> %{w: width, h: height}
+          _ -> nil
+        end
 
       true ->
         skip = len - 2
 
-        if byte_size(rest) >= skip do
-          next = binary_part(rest, skip, byte_size(rest) - skip)
-          jpeg_dims(next)
+        if skip >= 0 and byte_size(rest) >= skip do
+          jpeg_dims(binary_part(rest, skip, byte_size(rest) - skip))
         else
           nil
         end

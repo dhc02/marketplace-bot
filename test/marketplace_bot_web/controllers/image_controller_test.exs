@@ -28,4 +28,8 @@ defmodule MarketplaceBotWeb.ImageControllerTest do
   test "404 for out-of-range index", %{conn: conn, listing: l} do
     assert get(conn, ~p"/img/#{l.fb_id}/9").status == 404
   end
+
+  test "404 for negative index", %{conn: conn, listing: l} do
+    assert get(conn, ~p"/img/#{l.fb_id}/-1").status == 404
+  end
 end

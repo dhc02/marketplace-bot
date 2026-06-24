@@ -20,6 +20,16 @@ defmodule MarketplaceBot.ImageCacheTest do
     assert ImageCache.dimensions(<<0, 1, 2, 3, 4>>) == nil
   end
 
+  test "dimensions/1 returns nil (no raise) on a truncated SOF segment" do
+    # SOF0 marker but fewer than 5 bytes of payload
+    assert ImageCache.dimensions(<<0xFF, 0xD8, 0xFF, 0xC0, 0, 4, 8, 0>>) == nil
+  end
+
+  test "dimensions/1 returns nil (no raise) on a malformed segment length" do
+    # APP0 marker with len=0 -> skip would be negative
+    assert ImageCache.dimensions(<<0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 1, 2>>) == nil
+  end
+
   test "content_type detects png/jpeg, nil otherwise" do
     assert ImageCache.content_type(png(1, 1)) == "image/png"
     assert ImageCache.content_type(jpeg(1, 1)) == "image/jpeg"
@@ -82,6 +92,14 @@ defmodule MarketplaceBot.ImageCacheTest do
       l = insert_listing(["https://scontent.fbcdn.net/a.jpg"])
       Req.Test.stub(MarketplaceBot.ImageCache, fn conn -> Plug.Conn.send_resp(conn, 403, "nope") end)
       assert {:error, _} = ImageCache.fetch(l, 0, cache_dir: tmp_dir(), req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+    end
+
+    test "fetch/3 rejects a 200 non-image body without caching it" do
+      l = insert_listing(["https://scontent.fbcdn.net/a.jpg"])
+      dir = tmp_dir()
+      Req.Test.stub(MarketplaceBot.ImageCache, fn conn -> Req.Test.text(conn, "<html>not an image</html>") end)
+      assert {:error, _} = ImageCache.fetch(l, 0, cache_dir: dir, req_options: [plug: {Req.Test, MarketplaceBot.ImageCache}])
+      assert Path.wildcard(Path.join(dir, "*")) == []
     end
   end
 end
