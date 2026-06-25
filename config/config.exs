@@ -63,8 +63,11 @@ config :marketplace_bot, Oban,
   queues: [default: 5],
   plugins: [
     {Oban.Plugins.Cron,
-     # 13:00 UTC ≈ 8:00am Central (standard). Tune after the volume probe.
-     crontab: [{"0 13 * * *", MarketplaceBot.Jobs.DailyScan}]}
+     # Twice daily: 13:00 & 23:00 UTC ≈ 8:00am & 6:00pm Central (DST-summer).
+     crontab: [
+       {"0 13 * * *", MarketplaceBot.Jobs.DailyScan},
+       {"0 23 * * *", MarketplaceBot.Jobs.DailyScan}
+     ]}
   ]
 
 config :marketplace_bot, :search,
